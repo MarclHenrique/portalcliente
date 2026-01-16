@@ -1,0 +1,197 @@
+openapi: 3.0.1
+info:
+  title: API de movimentações financeiras
+  description: API para realizar operações de saque, depósito e transferência entre contas
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /v1/contas:
+    post:
+      tags:
+        - contas
+      summary: Cria uma nova conta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContaFinanceiraRequestDTO'
+      responses:
+        '201':
+          description: Conta criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContaFinanceiraResponseDTO'
+        '400':
+          description: Requisição inválida
+  /v1/contas/{idCliente}:
+    get:
+      tags:
+        - contas
+      summary: Consulta o saldo de uma conta do cliente
+      parameters:
+        - in: path
+          name: idCliente
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Saldo da conta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaldoResponseDTO'
+        '404':
+          description: Conta não encontrada
+  /v1/contas/deposito:
+    patch:
+      tags:
+        - contas
+      summary: Realiza um depósito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositoRequestDTO'
+        '200':
+          description: Depósito realizado com sucesso
+        '400':
+          description: Requisição inválida
+  /v1/contas/saque:
+    patch:
+      tags:
+        - contas
+      summary: Realiza um saque
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaqueRequestDTO'
+      responses:
+        '200':
+          description: Saque realizado com sucesso
+        '400':
+          description: Requisição inválida
+        '409':
+          description: Saldo insuficiente
+  /v1/transferencias:
+    post:
+      tags:
+        - transferencias
+      summary: Realiza uma transferência
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferenciaRequestDTO'
+      responses:
+        '200':
+          description: Transferência realizada com sucesso
+        '400':
+          description: Requisição inválida
+        '404':
+          description: Conta de origem não encontrada
+        '409':
+          description: Contas de origem e destino são iguais
+  /v1/accounts/{idConta}/transactions:
+    get:
+      tags:
+        - transferencias
+      summary: Consulta as movimentações de uma conta
+      parameters:
+        - in: path
+          name: accountId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Lista de movimentações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+components:
+  schemas:
+    ContaFinanceiraRequestDTO:
+      type: object
+      properties:
+        idCliente:
+          type: string
+          format: uuid
+          example: '082f31a9-08cc-40ea-8739-cd33bcd81f21'
+    ContaFinanceiraResponseDTO:
+      type: object
+      properties:
+        idConta:
+          type: string
+          format: uuid
+          example: '679af7c9-3d1e-4197-9357-27d2fd740b15'
+        idCliente:
+          type: string
+          format: uuid
+          example: '082f31a9-08cc-40ea-8739-cd33bcd81f21'
+        numeroAgencia:
+          type: integer
+          example: 1
+        numeroConta:
+          type: integer
+          example: 3243546
+        saldo:
+          type: number
+          format: decimal
+          example: 0.00
+    DepositoRequestDTO:
+      type: object
+      properties:
+        idConta:
+          type: string
+          format: uuid
+          example: '679af7c9-3d1e-4197-9357-27d2fd740b15'
+        valor:
+          type: number
+          format: decimal
+          example: 100.00
+    SaqueRequestDTO:
+      type: object
+      properties:
+        idConta:
+          type: string
+          format: uuid
+          example: '679af7c9-3d1e-4197-9357-27d2fd740b15'
+        saldo:
+          type: number
+          format: decimal
+          example: 150.00
+    SaldoResponseDTO:
+      type: object
+      properties:
+        saldo:
+          type: number
+          format: decimal
+          example: 1550.15
+    TransferenciaRequestDTO:
+      type: object
+      properties:
+        idContaOrigem:
+          type: string
+          format: uuid
+          example: 'f2e71049-5317-4891-9355-21066b03685c'
+        idContaDestino:
+          type: string
+          format: uuid
+          example: 'b962529f-f1ce-4a0e-8a67-66baabb97040'
+        valor:
+          type: number
+          format: decimal
+          example: 102.00
