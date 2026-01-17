@@ -1,7 +1,9 @@
 package br.com.coderbank.portalCliente.services;
 
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
+import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
+import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
 
@@ -76,4 +79,28 @@ public class ContaService {
                 conta.getIdCliente()
         );
     }
+
+    public OperacaoResponseDTO realizarDeposito(UUID idCliente, DepositoRequestDTO depositoRequestDTO) {
+
+        Conta  conta = contaRepository.findByIdCliente(idCliente)
+                .orElseThrow(() -> new IllegalStateException("Conta não encontrada para o cliente ID: " + idCliente));
+
+        BigDecimal saldoAnterior = conta.getSaldo();
+
+        BigDecimal novoSaldo = saldoAnterior.add(depositoRequestDTO.valor());
+
+        conta.setSaldo(novoSaldo);
+
+        contaRepository.save(conta);
+
+        return new OperacaoResponseDTO(
+                conta.getId(),
+                "DEPOSITO",
+                depositoRequestDTO.valor(),
+                saldoAnterior,
+                novoSaldo,
+                LocalDateTime.now()
+        );
+    }
+
 }
