@@ -12,7 +12,7 @@ public interface ContaRepository extends JpaRepository<Conta, UUID> { //Serve pa
     // É uma interface pois estende o jpaRepository que é uma ponte entre o bd e api possuindo operações básicas de crud com métodos prontos
     //Criamos um repository para cada entidade, especificamos a classe e o tipo do id
 
-    Optional<Conta> findByClienteId(UUID clienteId); //Verificar se o cliente já tem conta
+    Optional<Conta> findByIdCliente(UUID idCliente); //Verificar se o cliente já tem conta
 
     boolean existsByNumero(String numero); //Usado pra verificar se já existe um número igual ao gerado lá no service para o número da conta
 

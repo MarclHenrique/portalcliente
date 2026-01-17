@@ -6,7 +6,7 @@ import java.util.UUID;
 public record ContaRequestDTO( //Dados que chegam na aplicação
     
     @NotNull(message = "O ID do cliente é obrigatório")
-    UUID clienteId
+    UUID idCliente
 
 ) {
 }

@@ -10,7 +10,7 @@ public record ContaResponseDTO( // Definimos como Record e não precisamos ficar
      String agencia,
      String numero,
      BigDecimal saldo,
-     UUID clienteId,
+     UUID idCliente,
      LocalDateTime criadoEm,
      LocalDateTime atualizadoEm
 

@@ -27,7 +27,7 @@ public class Conta {
     private BigDecimal saldo;
 
     @Column(nullable = false)
-    private UUID clienteId;
+    private UUID idCliente;
 
     @Column
     @CreationTimestamp
@@ -69,12 +69,12 @@ public class Conta {
         this.saldo = saldo;
     }
 
-    public UUID getClienteId() {
-        return clienteId;
+    public UUID getIdCliente() {
+        return idCliente;
     }
 
-    public void setClienteId(UUID clienteId) {
-        this.clienteId = clienteId;
+    public void setIdCliente(UUID idCliente) {
+        this.idCliente = idCliente;
     }
 
     public LocalDateTime getCriadoEm() {

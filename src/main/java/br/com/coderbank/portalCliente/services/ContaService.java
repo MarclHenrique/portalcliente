@@ -2,6 +2,7 @@ package br.com.coderbank.portalCliente.services;
 
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
+import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import org.springframework.beans.BeanUtils;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class ContaService {
@@ -21,7 +23,7 @@ public class ContaService {
     public ContaResponseDTO criarConta(ContaRequestDTO contaRequestDTO) {
 
         // Verificando se o cliente já possui conta
-        contaRepository.findByClienteId(contaRequestDTO.clienteId())
+        contaRepository.findByIdCliente(contaRequestDTO.idCliente())
                 .ifPresent(conta -> {
                     throw new IllegalStateException("Cliente já possui uma conta cadastrada");
                 });
@@ -34,7 +36,7 @@ public class ContaService {
         contaEntity.setAgencia("0001");
         contaEntity.setNumero(gerarNumeroConta());
         contaEntity.setSaldo(BigDecimal.ZERO);
-        contaEntity.setClienteId(contaRequestDTO.clienteId());
+        contaEntity.setIdCliente(contaRequestDTO.idCliente());
 
         contaRepository.save(contaEntity); //Feito isso, salvamos no banco de dados
 
@@ -43,7 +45,7 @@ public class ContaService {
                 contaEntity.getAgencia(),
                 contaEntity.getNumero(),
                 contaEntity.getSaldo(),
-                contaEntity.getClienteId(),
+                contaEntity.getIdCliente(),
                 contaEntity.getCriadoEm(),
                 contaEntity.getAtualizadoEm()
         );
@@ -57,5 +59,21 @@ public class ContaService {
         } while (contaRepository.existsByNumero(numero));
 
         return numero;
+    }
+
+    public SaldoResponseDTO obterSaldo(UUID idCliente) {
+        // Buscar conta pelo ID do cliente
+        Conta conta = contaRepository.findByIdCliente(idCliente)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Conta não encontrada para o cliente ID: " + idCliente));
+
+        // Retornar DTO com informações do saldo
+        return new SaldoResponseDTO(
+                conta.getId(),
+                conta.getAgencia(),
+                conta.getNumero(),
+                conta.getSaldo(),
+                conta.getIdCliente()
+        );
     }
 }
