@@ -3,9 +3,11 @@ package br.com.coderbank.portalCliente.services;
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.SaqueRequestDTO;
+import br.com.coderbank.portalCliente.dtos.request.TransferenciaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
+import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import org.springframework.beans.BeanUtils;
@@ -127,6 +129,46 @@ public class ContaService {
                 saqueRequestDTO.valor(),
                 saldoAnterior,
                 novoSaldo,
+                LocalDateTime.now()
+        );
+    }
+
+    public TransferenciaResponseDTO realizarTransferencia(UUID clienteOrigemId, TransferenciaRequestDTO transferenciaRequestDTO) { //cliente sendo passado aqui é meio que um desperdicio, seria usado futuramente quando tivesse jwt/autenticação
+                                                                                                                                    //Tudo necessário já pegamos pelo dto, mas se o cliente tá aí, usamos ao menos pra buscar no banco sua existencia
+        Conta contaOrigem = contaRepository.findByIdCliente(clienteOrigemId)
+                .orElseThrow(() -> new IllegalStateException("Conta de origem não encontrada para o cliente ID: " + clienteOrigemId));
+
+        Conta contaDestino = contaRepository.findByIdCliente(transferenciaRequestDTO.idContaDestino())
+                .orElseThrow(() -> new IllegalStateException("Conta de destino não encontrada para o cliente ID: " + transferenciaRequestDTO.idContaDestino()));
+
+        if (contaOrigem.getIdCliente().equals(contaDestino.getIdCliente())) { //Verificando se transferência é para mesma conta
+            throw new IllegalStateException("Não é permitido transferencia para a própria conta");
+        }
+
+        BigDecimal saldoAnteriorOrigem = contaOrigem.getSaldo();  // Armazenando valor da conta que vai fazer a transferencia
+
+        if (saldoAnteriorOrigem.compareTo(transferenciaRequestDTO.valor()) < 0) { //Verificando se o valor transferido é compativel com o valor da conta
+            throw new IllegalStateException(String.format("Saldo insuficiente. Saldo atual: R$ %.2f, Valor solicitado: R$ %.2f", saldoAnteriorOrigem, transferenciaRequestDTO.valor()));
+        }
+
+        // 6. Calcular novos saldos
+        BigDecimal novoSaldoOrigem = saldoAnteriorOrigem.subtract(transferenciaRequestDTO.valor());
+        BigDecimal novoSaldoDestino = contaDestino.getSaldo().add(transferenciaRequestDTO.valor());
+
+        contaOrigem.setSaldo(novoSaldoOrigem); // valor atualizado nas contas
+        contaDestino.setSaldo(novoSaldoDestino);
+
+        contaRepository.save(contaOrigem);
+        contaRepository.save(contaDestino);
+
+        return new TransferenciaResponseDTO(
+                contaOrigem.getId(),
+                contaDestino.getId(),
+                contaOrigem.getIdCliente(),
+                contaDestino.getIdCliente(),
+                transferenciaRequestDTO.valor(),
+                saldoAnteriorOrigem,
+                novoSaldoOrigem,
                 LocalDateTime.now()
         );
     }
