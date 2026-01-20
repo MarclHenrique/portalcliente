@@ -10,6 +10,7 @@ public record TransferenciaResponseDTO(
         UUID contaDestinoId,
         UUID clienteOrigemId,
         UUID clienteDestinoId,
+        String tipoOperacao,
         BigDecimal valor,
         BigDecimal saldoAnteriorOrigem,
         BigDecimal saldoAtualOrigem,
