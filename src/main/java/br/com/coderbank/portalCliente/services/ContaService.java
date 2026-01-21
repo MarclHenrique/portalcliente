@@ -10,6 +10,10 @@ import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.entities.Enum.TipoMovimentacao;
+import br.com.coderbank.portalCliente.exceptions.ClienteJaExistenteException;
+import br.com.coderbank.portalCliente.exceptions.ContaNaoEncontradaException;
+import br.com.coderbank.portalCliente.exceptions.SaldoInsuficienteException;
+import br.com.coderbank.portalCliente.exceptions.TransferenciaParaMesmaContaException;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +34,14 @@ public class ContaService {
     @Autowired
     private MovimentacaoService movimentacaoService;
 
-    public ContaResponseDTO criarConta(ContaRequestDTO contaRequestDTO) {
+    public ContaResponseDTO criarConta(ContaRequestDTO contaRequestDTO) { //Apenas declarando como final e ele será imutavel, porq nao podemos mudar oq veio do controller para o service
+                                                                                //Assim evitamos que a jvm fique gastando recursos verificando se o objeto mudou
+        final var idCliente = contaRequestDTO.idCliente(); // Tornando mais legível para passar na validação
 
         // Verificando se o cliente já possui conta
-        contaRepository.findByIdCliente(contaRequestDTO.idCliente())
+        contaRepository.findByIdCliente(idCliente)
                 .ifPresent(conta -> {
-                    throw new IllegalStateException("Cliente já possui uma conta cadastrada");
+                    throw new ClienteJaExistenteException("Cliente já possui uma conta cadastrada");
                 });
 
         Conta contaEntity = new Conta(); //Instancia da classe entidades
@@ -51,7 +57,7 @@ public class ContaService {
         contaRepository.save(contaEntity); //Feito isso, salvamos no banco de dados
 
         return new ContaResponseDTO( //Retornando um Objeto do tipo record que é um construtor com argumentos, então passamos os mesmos atributos do ContaResponseDTO
-                contaEntity.getId(),
+                contaEntity.getIdConta(),
                 contaEntity.getAgencia(),
                 contaEntity.getNumero(),
                 contaEntity.getSaldo(),
@@ -71,15 +77,15 @@ public class ContaService {
         return numero;
     }
 
-    public SaldoResponseDTO obterSaldo(UUID idCliente) {
+    public SaldoResponseDTO obterSaldo(final UUID idCliente) {
         // Buscar conta pelo ID do cliente
         Conta conta = contaRepository.findByIdCliente(idCliente)
-                .orElseThrow(() -> new IllegalStateException(
+                .orElseThrow(() -> new ContaNaoEncontradaException(
                         "Conta não encontrada para o cliente ID: " + idCliente));
 
         // Retornar DTO com informações do saldo
         return new SaldoResponseDTO(
-                conta.getId(),
+                conta.getIdConta(),
                 conta.getAgencia(),
                 conta.getNumero(),
                 conta.getSaldo(),
@@ -87,10 +93,10 @@ public class ContaService {
         );
     }
 
-    public OperacaoResponseDTO realizarDeposito(UUID idCliente, DepositoRequestDTO depositoRequestDTO) {
+    public OperacaoResponseDTO realizarDeposito(final UUID idConta, DepositoRequestDTO depositoRequestDTO) {
 
-        Conta conta = contaRepository.findByIdCliente(idCliente)
-                .orElseThrow(() -> new IllegalStateException("Conta não encontrada para o cliente ID: " + idCliente));
+        Conta conta = contaRepository.findByIdConta(idConta)
+                .orElseThrow(() -> new ContaNaoEncontradaException("Conta não encontrada para o Conta ID: " + idConta));
 
         BigDecimal saldoAnterior = conta.getSaldo();
 
@@ -101,14 +107,14 @@ public class ContaService {
         contaRepository.save(conta);
 
         movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
-                conta.getId(),
+                conta.getIdConta(),
                 TipoMovimentacao.DEPOSITO,
                 depositoRequestDTO.valor(),
                 null
         );
 
         return new OperacaoResponseDTO(
-                conta.getId(),
+                conta.getIdConta(),
                 "DEPOSITO",
                 depositoRequestDTO.valor(),
                 saldoAnterior,
@@ -117,15 +123,15 @@ public class ContaService {
         );
     }
 
-    public OperacaoResponseDTO realizarSaque(UUID idCliente, SaqueRequestDTO saqueRequestDTO) {
+    public OperacaoResponseDTO realizarSaque(final UUID idConta, SaqueRequestDTO saqueRequestDTO) {
 
-        Conta conta = contaRepository.findByIdCliente(idCliente) // Usando repository e buscando o id cliente
-                .orElseThrow(() -> new IllegalStateException("Conta não encontrada para o cliente ID: " + idCliente)); //Lançando erro caso nao exista
+        Conta conta = contaRepository.findByIdConta(idConta) // Usando repository e buscando o id cliente
+                .orElseThrow(() -> new ContaNaoEncontradaException("Conta não encontrada para o Conta ID: " + idConta)); //Lançando erro caso nao exista
 
         BigDecimal saldoAnterior = conta.getSaldo(); // Armazenando valor atual antes do saque
 
         if (saldoAnterior.compareTo(saqueRequestDTO.valor()) < 0) { //Verificando se o valor do saque excede o total na conta
-            throw new IllegalStateException(String.format("Saldo insuficiente. Saldo autal: %.2f, Valor solicitado: R$ %.2f", saldoAnterior, saqueRequestDTO.valor()));
+            throw new SaldoInsuficienteException(String.format("Saldo insuficiente. Saldo autal: %.2f, Valor solicitado: R$ %.2f", saldoAnterior, saqueRequestDTO.valor()));
         }
 
         BigDecimal novoSaldo = saldoAnterior.subtract(saqueRequestDTO.valor()); // Subtraindo o valor atual pelo valor do saque
@@ -135,14 +141,14 @@ public class ContaService {
         contaRepository.save(conta); // Persistindo no banco
 
         movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
-                conta.getId(),
+                conta.getIdConta(),
                 TipoMovimentacao.SAQUE,
                 saqueRequestDTO.valor(),
                 null
         );
 
         return new OperacaoResponseDTO( // Informação para o USer
-                conta.getId(),
+                conta.getIdConta(),
                 "SAQUE",
                 saqueRequestDTO.valor(),
                 saldoAnterior,
@@ -151,22 +157,22 @@ public class ContaService {
         );
     }
 
-    public TransferenciaResponseDTO realizarTransferencia(UUID clienteOrigemId, TransferenciaRequestDTO transferenciaRequestDTO) { //cliente sendo passado aqui é meio que um desperdicio, seria usado futuramente quando tivesse jwt/autenticação
+    public TransferenciaResponseDTO realizarTransferencia(final UUID idContaOrigem, TransferenciaRequestDTO transferenciaRequestDTO) { //cliente sendo passado aqui é meio que um desperdicio, seria usado futuramente quando tivesse jwt/autenticação
         //Tudo necessário já pegamos pelo dto, mas se o cliente tá aí, usamos ao menos pra buscar no banco sua existencia
-        Conta contaOrigem = contaRepository.findByIdCliente(clienteOrigemId)
-                .orElseThrow(() -> new IllegalStateException("Conta de origem não encontrada para o cliente ID: " + clienteOrigemId));
+        Conta contaOrigem = contaRepository.findByIdConta(idContaOrigem)
+                .orElseThrow(() -> new ContaNaoEncontradaException("Conta de origem não encontrada para o Conta ID: " + idContaOrigem));
 
-        Conta contaDestino = contaRepository.findByIdCliente(transferenciaRequestDTO.idContaDestino())
-                .orElseThrow(() -> new IllegalStateException("Conta de destino não encontrada para o cliente ID: " + transferenciaRequestDTO.idContaDestino()));
+        Conta contaDestino = contaRepository.findByIdConta(transferenciaRequestDTO.idContaDestino())
+                .orElseThrow(() -> new ContaNaoEncontradaException("Conta de destino não encontrada para o Conta ID: " + transferenciaRequestDTO.idContaDestino()));
 
-        if (contaOrigem.getIdCliente().equals(contaDestino.getIdCliente())) { //Verificando se transferência é para mesma conta
-            throw new IllegalStateException("Não é permitido transferencia para a própria conta");
+        if (contaOrigem.getIdCliente().equals(contaDestino.getIdConta())) { //Verificando se transferência é para mesma conta
+            throw new TransferenciaParaMesmaContaException("Não é permitido transferencia para a própria conta");
         }
 
         BigDecimal saldoAnteriorOrigem = contaOrigem.getSaldo();  // Armazenando valor da conta que vai fazer a transferencia
 
         if (saldoAnteriorOrigem.compareTo(transferenciaRequestDTO.valor()) < 0) { //Verificando se o valor transferido é compativel com o valor da conta
-            throw new IllegalStateException(String.format("Saldo insuficiente. Saldo atual: R$ %.2f, Valor solicitado: R$ %.2f", saldoAnteriorOrigem, transferenciaRequestDTO.valor()));
+            throw new SaldoInsuficienteException(String.format("Saldo insuficiente. Saldo atual: R$ %.2f, Valor solicitado: R$ %.2f", saldoAnteriorOrigem, transferenciaRequestDTO.valor()));
         }
 
         // 6. Calcular novos saldos
@@ -180,7 +186,7 @@ public class ContaService {
         contaRepository.save(contaDestino);
 
         movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
-                contaOrigem.getId(),
+                contaOrigem.getIdConta(),
                 TipoMovimentacao.TRANSFERENCIA,
                 transferenciaRequestDTO.valor(),
                 contaDestino.getIdCliente()
@@ -188,8 +194,8 @@ public class ContaService {
 
 
         return new TransferenciaResponseDTO(
-                contaOrigem.getId(),
-                contaDestino.getId(),
+                contaOrigem.getIdConta(),
+                contaDestino.getIdConta(),
                 contaOrigem.getIdCliente(),
                 contaDestino.getIdCliente(),
                 "TRANSFERENCIA",

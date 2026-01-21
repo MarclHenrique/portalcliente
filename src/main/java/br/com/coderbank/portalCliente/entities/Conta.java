@@ -15,7 +15,7 @@ public class Conta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID idConta;
 
     @Column(nullable = false)
     private String agencia;
@@ -37,12 +37,12 @@ public class Conta {
     @UpdateTimestamp
     private LocalDateTime atualizadoEm;
 
-    public UUID getId() {
-        return id;
+    public UUID getIdConta() {
+        return idConta;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setIdConta(UUID idConta) {
+        this.idConta = idConta;
     }
 
     public String getAgencia() {
@@ -97,11 +97,11 @@ public class Conta {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Conta conta = (Conta) o;
-        return Objects.equals(id, conta.id);
+        return Objects.equals(idConta, conta.idConta);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(idConta);
     }
 }

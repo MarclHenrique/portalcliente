@@ -3,11 +3,9 @@ package br.com.coderbank.portalCliente.controllers;
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.SaqueRequestDTO;
-import br.com.coderbank.portalCliente.dtos.request.TransferenciaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
-import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.services.ContaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +44,7 @@ public class ContaController {
     @PatchMapping("/deposito")
     public ResponseEntity<OperacaoResponseDTO> realizarDeposito(@Valid @RequestBody DepositoRequestDTO depositoRequestDTO) { //Não passamos o id aqui, porq ele já vem dentro do corpo da requisição e no metodo anterior passamos porq o spring pega no path
 
-        OperacaoResponseDTO response = contaService.realizarDeposito(depositoRequestDTO.idCliente(), depositoRequestDTO); //primeiro parametro passa o id informando pelo cliente e o segundo envia o valor do deposito
+        OperacaoResponseDTO response = contaService.realizarDeposito(depositoRequestDTO.idConta(), depositoRequestDTO); //primeiro parametro passa o id informando pelo cliente e o segundo envia o valor do deposito
 
         /**
          * Inicia no Controller, recebe os dados do usuário e envia ao Service
@@ -61,17 +59,8 @@ public class ContaController {
     @PatchMapping("/saque")
     public ResponseEntity<OperacaoResponseDTO> realizarSaque(@Valid @RequestBody SaqueRequestDTO saqueRequestDTO) {
 
-        OperacaoResponseDTO response = contaService.realizarSaque(saqueRequestDTO.idCliente(), saqueRequestDTO);
+        OperacaoResponseDTO response = contaService.realizarSaque(saqueRequestDTO.idConta(), saqueRequestDTO);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @PostMapping("/transferencias")
-    public ResponseEntity<TransferenciaResponseDTO> realizarTransferencia(@Valid @RequestBody TransferenciaRequestDTO transferenciaRequestDTO) {
-
-        TransferenciaResponseDTO response = contaService.realizarTransferencia(transferenciaRequestDTO.idContaOrigem(), transferenciaRequestDTO);
-
-        return ResponseEntity.status(HttpStatus.OK).body((response));
-
     }
 }

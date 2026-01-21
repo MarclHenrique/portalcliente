@@ -4,6 +4,7 @@ import br.com.coderbank.portalCliente.dtos.response.MovimentacaoResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.entities.Enum.TipoMovimentacao;
 import br.com.coderbank.portalCliente.entities.Movimentacao;
+import br.com.coderbank.portalCliente.exceptions.ContaNaoEncontradaException;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import br.com.coderbank.portalCliente.repositories.MovimentacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,13 @@ public class MovimentacaoService {
     }
 
     // Consultar movimentações de um cliente
-    public List<MovimentacaoResponseDTO> consultarMovimentacoes(UUID clienteId) { //Usando collection List porque podem haver varias movimentações
+    public List<MovimentacaoResponseDTO> consultarMovimentacoes(UUID idConta) { //Usando collection List porque podem haver varias movimentações
 
-        Conta conta = contaRepository.findByIdCliente(clienteId) //Só verificando existência do cliente
-                .orElseThrow(() -> new IllegalStateException(
-                        "Conta não encontrada para o cliente ID: " + clienteId));
+        Conta conta = contaRepository.findByIdConta(idConta) //Só verificando existência do cliente
+                .orElseThrow(() -> new ContaNaoEncontradaException(
+                        "Conta não encontrada para o cliente ID: " + idConta));
 
-        List<Movimentacao> movimentacoes = movimentacaoRepository.findByContaOrderByDataHoraDesc(conta.getId()); //Usando metodo do Repository e buscando
+        List<Movimentacao> movimentacoes = movimentacaoRepository.findByContaOrderByDataHoraDesc(conta.getIdConta()); //Usando metodo do Repository e buscando
 
         // Converter para DTO
         return movimentacoes.stream()

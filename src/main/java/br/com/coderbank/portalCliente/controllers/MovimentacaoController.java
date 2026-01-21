@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/movimentacoes")
+@RequestMapping("/v1/accounts")
 public class MovimentacaoController {
 
     @Autowired
     private MovimentacaoService movimentacaoService;
 
-    @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<List<MovimentacaoResponseDTO>> consultarMovimentacoes(@PathVariable UUID clienteId) {
+    @GetMapping("/{idConta}/transactions")
+    public ResponseEntity<List<MovimentacaoResponseDTO>> consultarMovimentacoes(@PathVariable UUID idConta) {
 
-        List<MovimentacaoResponseDTO> movimentacoes = movimentacaoService.consultarMovimentacoes(clienteId);
+        List<MovimentacaoResponseDTO> movimentacoes = movimentacaoService.consultarMovimentacoes(idConta);
 
         return ResponseEntity.ok(movimentacoes);
     }

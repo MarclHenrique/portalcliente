@@ -8,14 +8,14 @@ import java.util.UUID;
 
 public record TransferenciaRequestDTO(
 
-        @NotNull(message = "O ID do cliente remetente é obrigatório")
+        @NotNull(message = "O ID da conta remetente é obrigatório") //Validação
         UUID idContaOrigem,
 
-        @NotNull(message = "O ID do cliente destinatário é obrigatório")
+        @NotNull(message = "O ID da conta é obrigatório") //Validação
         UUID idContaDestino,
 
-        @NotNull(message = "O valor da transferência é obrigatório")
-        @DecimalMin(value = "0.01", message = "O valor da transferência deve ser maior que zero")
+        @NotNull(message = "O valor da transferência é obrigatório") //Validação
+        @DecimalMin(value = "0.01", message = "O valor da transferência deve ser maior que zero") //Validação
         BigDecimal valor
 ) {
 }
