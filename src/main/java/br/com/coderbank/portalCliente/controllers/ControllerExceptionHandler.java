@@ -20,21 +20,21 @@ import java.util.HashMap;
      */
 
 @ControllerAdvice
-public class ControllerExceptionHandler { //Aqui temos um controller global que vai receber qualquer tipo de excessão que ocorrer na Service
+public class ControllerExceptionHandler { //Aqui temos um controller global que vai receber qualquer tipo de exceção que ocorrer na Service
 
-    @ExceptionHandler({ClienteJaExistenteException.class, ContaJaExistenteException.class}) //Passando que esse método vai realizar o tratamento adequado para essa Excessão, mas poderiamos passar uma lista de Excessões
-    @ResponseBody //Informando que a excessão vai retornar um body pro endpoint onde o erro foi gerado
+    @ExceptionHandler({ClienteJaExistenteException.class, ContaJaExistenteException.class}) //Passando que esse método vai realizar o tratamento adequado para essa exceção, mas poderiamos passar uma lista de exceções
+    @ResponseBody //Informando que a exceção vai retornar um body pro endpoint onde o erro foi gerado
     @ResponseStatus(HttpStatus.CONFLICT) //Retornando status de conflito(409) todos status code da familia 400 são erro do cliente, como envio de dados incorretos
-    public ErrorResponseDTO conflict(final RuntimeException exception) { //Basicamente o ErrorResponseDto vai responder com o erro e a hora, ele recebe um objeto Throwable que possui as infos da excessão
+    public ErrorResponseDTO conflict(final RuntimeException exception) { //Basicamente o ErrorResponseDto vai responder com o erro e a hora, ele recebe um objeto Throwable que possui as infos da exceção
 
-        final var exceptionMessage = exception.getMessage(); //Capturando o motivo da excessão
+        final var exceptionMessage = exception.getMessage(); //Capturando o motivo da exceção
 
         return new ErrorResponseDTO(exceptionMessage, System.currentTimeMillis()); //Passando a resposta pro cliente do motivo do erro
     }
 
     @ExceptionHandler(ContaNaoEncontradaException.class)
     @ResponseBody
-    @ResponseStatus(HttpStatus.NOT_FOUND) // Tratando excessões do tipo not Found(404)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // Tratando exceções do tipo not Found(404)
     public ErrorResponseDTO handleNotFound(final RuntimeException exception) { //Usando RuntimeException porque usar o Handler generalizamos muito, qualquer tipo de erro capturamos
 
         return new ErrorResponseDTO(exception.getMessage(), System.currentTimeMillis());
@@ -48,7 +48,7 @@ public class ControllerExceptionHandler { //Aqui temos um controller global que 
         return new ErrorResponseDTO(exception.getMessage(),System.currentTimeMillis());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class) //Aqui teremos uma excessão que ocorre quando o formato do dado enviado pelo cliente é inválio ou aplicação não aceita
+    @ExceptionHandler(MethodArgumentNotValidException.class) //Aqui teremos uma exceção que ocorre quando o formato do dado enviado pelo cliente é inválio ou aplicação não aceita
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponseDTO handleValidation(final  MethodArgumentNotValidException exception) {

@@ -89,7 +89,7 @@ public class ContaService {
                 conta.getAgencia(),
                 conta.getNumero(),
                 conta.getSaldo(),
-                conta.getIdCliente()
+                conta.getIdConta()
         );
     }
 
@@ -165,7 +165,7 @@ public class ContaService {
         Conta contaDestino = contaRepository.findByIdConta(transferenciaRequestDTO.idContaDestino())
                 .orElseThrow(() -> new ContaNaoEncontradaException("Conta de destino não encontrada para o Conta ID: " + transferenciaRequestDTO.idContaDestino()));
 
-        if (contaOrigem.getIdCliente().equals(contaDestino.getIdConta())) { //Verificando se transferência é para mesma conta
+        if (contaOrigem.getIdConta().equals(contaDestino.getIdConta())) { //Verificando se transferência é para mesma conta
             throw new TransferenciaParaMesmaContaException("Não é permitido transferencia para a própria conta");
         }
 
