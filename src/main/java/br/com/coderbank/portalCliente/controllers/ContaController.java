@@ -2,6 +2,7 @@ package br.com.coderbank.portalCliente.controllers;
 
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
+import br.com.coderbank.portalCliente.dtos.request.SaqueRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
@@ -51,6 +52,14 @@ public class ContaController {
          * Após isso o Service monta a resposta com o OperacaoResponseDto
          * Finaliza no controller, retornando status e o responseDto
          */
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PatchMapping("/saque")
+    public ResponseEntity<OperacaoResponseDTO> realizarSaque(@Valid @RequestBody SaqueRequestDTO saqueRequestDTO) {
+
+        OperacaoResponseDTO response = contaService.realizarSaque(saqueRequestDTO.idCliente(), saqueRequestDTO );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

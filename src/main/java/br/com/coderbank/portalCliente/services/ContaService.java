@@ -2,6 +2,7 @@ package br.com.coderbank.portalCliente.services;
 
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
+import br.com.coderbank.portalCliente.dtos.request.SaqueRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
@@ -82,7 +83,7 @@ public class ContaService {
 
     public OperacaoResponseDTO realizarDeposito(UUID idCliente, DepositoRequestDTO depositoRequestDTO) {
 
-        Conta  conta = contaRepository.findByIdCliente(idCliente)
+        Conta conta = contaRepository.findByIdCliente(idCliente)
                 .orElseThrow(() -> new IllegalStateException("Conta não encontrada para o cliente ID: " + idCliente));
 
         BigDecimal saldoAnterior = conta.getSaldo();
@@ -97,6 +98,33 @@ public class ContaService {
                 conta.getId(),
                 "DEPOSITO",
                 depositoRequestDTO.valor(),
+                saldoAnterior,
+                novoSaldo,
+                LocalDateTime.now()
+        );
+    }
+
+    public OperacaoResponseDTO realizarSaque(UUID idCliente, SaqueRequestDTO saqueRequestDTO) {
+
+        Conta conta = contaRepository.findByIdCliente(idCliente) // Usando repository e buscando o id cliente
+                .orElseThrow(() -> new IllegalStateException("Conta não encontrada para o cliente ID: " + idCliente)); //Lançando erro caso nao exista
+
+        BigDecimal saldoAnterior = conta.getSaldo(); // Armazenando valor atual antes do saque
+
+        if (saldoAnterior.compareTo(saqueRequestDTO.valor()) < 0) { //Verificando se o valor do saque excede o total na conta
+            throw new IllegalStateException(String.format("Saldo insuficiente. Saldo autal: %.2f, Valor solicitado: R$ %.2f", saldoAnterior, saqueRequestDTO.valor()));
+        }
+
+        BigDecimal novoSaldo = saldoAnterior.subtract(saqueRequestDTO.valor()); // Subtraindo o valor atual pelo valor do saque
+
+        conta.setSaldo(novoSaldo); //Setando novo valor
+
+        contaRepository.save(conta); // Persistindo no banco
+
+        return new OperacaoResponseDTO( // Informação para o USer
+                conta.getId(),
+                "SAQUE",
+                saqueRequestDTO.valor(),
                 saldoAnterior,
                 novoSaldo,
                 LocalDateTime.now()
