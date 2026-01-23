@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public record SaqueRequestDTO(
 
-        @NotNull(message = "O id do cliente é obrigatório")
-        UUID idCliente,
+        @NotNull(message = "O id da conta é obrigatório") //Validação
+        UUID idConta,
 
-        @NotNull(message = "O valor do saque é obrigatório")
+        @NotNull(message = "O valor do saque é obrigatório") //Validação
         @DecimalMin(value = "0.01", message = "O valor deve ser maior que zero")
         BigDecimal valor
 
