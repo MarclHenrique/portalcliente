@@ -10,10 +10,7 @@ import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
 import br.com.coderbank.portalCliente.entities.Enum.TipoMovimentacao;
-import br.com.coderbank.portalCliente.exceptions.ClienteJaExistenteException;
-import br.com.coderbank.portalCliente.exceptions.ContaNaoEncontradaException;
-import br.com.coderbank.portalCliente.exceptions.SaldoInsuficienteException;
-import br.com.coderbank.portalCliente.exceptions.TransferenciaParaMesmaContaException;
+import br.com.coderbank.portalCliente.exceptions.*;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,7 +160,7 @@ public class ContaService {
                 .orElseThrow(() -> new ContaNaoEncontradaException("Conta de origem não encontrada para o Conta ID: " + idContaOrigem));
 
         Conta contaDestino = contaRepository.findByIdConta(transferenciaRequestDTO.idContaDestino())
-                .orElseThrow(() -> new ContaNaoEncontradaException("Conta de destino não encontrada para o Conta ID: " + transferenciaRequestDTO.idContaDestino()));
+                .orElseThrow(() -> new ContaDestinoInvalidaException("Conta de destino não encontrada para o Conta ID: " + transferenciaRequestDTO.idContaDestino()));
 
         if (contaOrigem.getIdConta().equals(contaDestino.getIdConta())) { //Verificando se transferência é para mesma conta
             throw new TransferenciaParaMesmaContaException("Não é permitido transferencia para a própria conta");
@@ -189,7 +186,7 @@ public class ContaService {
                 contaOrigem.getIdConta(),
                 TipoMovimentacao.TRANSFERENCIA,
                 transferenciaRequestDTO.valor(),
-                contaDestino.getIdCliente()
+                contaDestino.getIdConta()
         );
 
 
