@@ -9,6 +9,7 @@ import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.entities.Conta;
+import br.com.coderbank.portalCliente.entities.Enum.TipoMovimentacao;
 import br.com.coderbank.portalCliente.repositories.ContaRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class ContaService {
     @Autowired
     private ContaRepository contaRepository; // Como estamos salvando, a Service depende da repository pois ela que possui o método de salvar
     private final Random random = new Random();
+
+    @Autowired
+    private MovimentacaoService movimentacaoService;
 
     public ContaResponseDTO criarConta(ContaRequestDTO contaRequestDTO) {
 
@@ -96,6 +100,13 @@ public class ContaService {
 
         contaRepository.save(conta);
 
+        movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
+                conta.getId(),
+                TipoMovimentacao.DEPOSITO,
+                depositoRequestDTO.valor(),
+                null
+        );
+
         return new OperacaoResponseDTO(
                 conta.getId(),
                 "DEPOSITO",
@@ -123,6 +134,13 @@ public class ContaService {
 
         contaRepository.save(conta); // Persistindo no banco
 
+        movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
+                conta.getId(),
+                TipoMovimentacao.SAQUE,
+                saqueRequestDTO.valor(),
+                null
+        );
+
         return new OperacaoResponseDTO( // Informação para o USer
                 conta.getId(),
                 "SAQUE",
@@ -134,7 +152,7 @@ public class ContaService {
     }
 
     public TransferenciaResponseDTO realizarTransferencia(UUID clienteOrigemId, TransferenciaRequestDTO transferenciaRequestDTO) { //cliente sendo passado aqui é meio que um desperdicio, seria usado futuramente quando tivesse jwt/autenticação
-                                                                                                                                    //Tudo necessário já pegamos pelo dto, mas se o cliente tá aí, usamos ao menos pra buscar no banco sua existencia
+        //Tudo necessário já pegamos pelo dto, mas se o cliente tá aí, usamos ao menos pra buscar no banco sua existencia
         Conta contaOrigem = contaRepository.findByIdCliente(clienteOrigemId)
                 .orElseThrow(() -> new IllegalStateException("Conta de origem não encontrada para o cliente ID: " + clienteOrigemId));
 
@@ -161,11 +179,20 @@ public class ContaService {
         contaRepository.save(contaOrigem);
         contaRepository.save(contaDestino);
 
+        movimentacaoService.registrarMovimentacao( //Adicionando agora um novo metodo para apenas registrar o Tipo da movimentacao
+                contaOrigem.getId(),
+                TipoMovimentacao.TRANSFERENCIA,
+                transferenciaRequestDTO.valor(),
+                contaDestino.getIdCliente()
+        );
+
+
         return new TransferenciaResponseDTO(
                 contaOrigem.getId(),
                 contaDestino.getId(),
                 contaOrigem.getIdCliente(),
                 contaDestino.getIdCliente(),
+                "TRANSFERENCIA",
                 transferenciaRequestDTO.valor(),
                 saldoAnteriorOrigem,
                 novoSaldoOrigem,
