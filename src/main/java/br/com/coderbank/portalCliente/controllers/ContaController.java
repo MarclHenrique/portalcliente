@@ -3,9 +3,11 @@ package br.com.coderbank.portalCliente.controllers;
 import br.com.coderbank.portalCliente.dtos.request.ContaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.DepositoRequestDTO;
 import br.com.coderbank.portalCliente.dtos.request.SaqueRequestDTO;
+import br.com.coderbank.portalCliente.dtos.request.TransferenciaRequestDTO;
 import br.com.coderbank.portalCliente.dtos.response.ContaResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.OperacaoResponseDTO;
 import br.com.coderbank.portalCliente.dtos.response.SaldoResponseDTO;
+import br.com.coderbank.portalCliente.dtos.response.TransferenciaResponseDTO;
 import br.com.coderbank.portalCliente.services.ContaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,9 +61,17 @@ public class ContaController {
     @PatchMapping("/saque")
     public ResponseEntity<OperacaoResponseDTO> realizarSaque(@Valid @RequestBody SaqueRequestDTO saqueRequestDTO) {
 
-        OperacaoResponseDTO response = contaService.realizarSaque(saqueRequestDTO.idCliente(), saqueRequestDTO );
+        OperacaoResponseDTO response = contaService.realizarSaque(saqueRequestDTO.idCliente(), saqueRequestDTO);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @PostMapping("/transferencias")
+    public ResponseEntity<TransferenciaResponseDTO> realizarTransferencia(@Valid @RequestBody TransferenciaRequestDTO transferenciaRequestDTO) {
+
+        TransferenciaResponseDTO response = contaService.realizarTransferencia(transferenciaRequestDTO.idContaOrigem(), transferenciaRequestDTO);
+
+        return ResponseEntity.status(HttpStatus.OK).body((response));
+
+    }
 }
